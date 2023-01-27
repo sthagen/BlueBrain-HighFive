@@ -26,7 +26,7 @@ namespace HighFive {
 namespace {  // unnamed
 inline DataTypeClass convert_type_class(const H5T_class_t& tclass);
 inline std::string type_class_string(DataTypeClass);
-inline hid_t create_string(std::size_t length);
+inline hid_t create_string(std::size_t length, Encoding encoding = Encoding::UTF8, Padding padding = Padding::NULLTERM);
 }  // namespace
 
 inline bool DataType::empty() const noexcept {
@@ -173,6 +173,13 @@ class AtomicType<char[StrLen]>: public DataType {
   public:
     inline AtomicType()
         : DataType(create_string(StrLen)) {}
+};
+
+template <typename T, size_t N, Encoding E, Padding P>
+class AtomicType<FixedLenString<T, N, E, P>>: public DataType {
+  public:
+    inline AtomicType()
+        : DataType(create_string(N, E, P)) {}
 };
 
 template <size_t StrLen>
@@ -381,13 +388,13 @@ inline void EnumType<T>::commit(const Object& object, const std::string& name) c
 
 namespace {
 
-inline hid_t create_string(size_t length) {
+inline hid_t create_string(size_t length, Encoding encoding, Padding padding) {
     hid_t _hid = H5Tcopy(H5T_C_S1);
     if (H5Tset_size(_hid, length) < 0) {
         HDF5ErrMapper::ToException<DataTypeException>("Unable to define datatype size to variable");
     }
-    // define encoding to UTF-8 by default
-    H5Tset_cset(_hid, H5T_CSET_UTF8);
+    H5Tset_cset(_hid, static_cast<H5T_cset_t>(encoding));
+    H5Tset_strpad(_hid, static_cast<H5T_str_t>(padding));
     return _hid;
 }
 

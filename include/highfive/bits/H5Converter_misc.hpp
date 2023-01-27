@@ -479,6 +479,33 @@ struct inspector<T*> {
     }
 };
 
+template <>
+struct inspector<const char*> {
+    using type = const char*;
+    using base_type = char;
+    using hdf5_type = char*;
+
+    static constexpr size_t ndim = 0;
+    static constexpr size_t recursive_ndim = ndim;
+    static constexpr bool is_trivially_copyable = std::is_trivially_copyable<type>::value;
+
+    static size_t getSizeVal(const type& /* val */) {
+        return 0;
+    }
+
+    static std::vector<size_t> getDimensions(const type& /* val */) {
+        return {};
+    }
+
+    static const hdf5_type* data(const type& val) {
+        return reinterpret_cast<const hdf5_type*>(val);
+    }
+
+    static void serialize(const type& val, hdf5_type* m) {
+        strncpy(*m, val, 10);
+    }
+};
+
 // Cannot be use for reading
 template <typename T, size_t N>
 struct inspector<T[N]> {
@@ -729,6 +756,54 @@ struct inspector<boost::numeric::ublas::matrix<T>> {
 };
 #endif
 
+template <typename T, size_t N, Encoding E, Padding P>
+struct inspector<FixedLenString<T, N, E, P>> {
+    using type = FixedLenString<T, N, E, P>;
+    using value_type = T;
+    using base_type = FixedLenString<T, N, E, P>;
+    using hdf5_type = typename inspector<value_type>::hdf5_type;
+
+    static constexpr size_t ndim = inspector<value_type>::ndim - 1;
+    static constexpr size_t recursive_ndim = inspector<value_type>::recursive_ndim - 1;
+    static constexpr bool is_trivially_copyable = std::is_trivially_copyable<value_type>::value &&
+                                                  inspector<value_type>::is_trivially_copyable;
+
+    static std::vector<size_t> getDimensions(const type& val) {
+        auto dims = inspector<value_type>::getDimensions(val.obj);
+        dims.pop_back();
+        return dims;
+    }
+
+    static size_t getSizeVal(const type& val) {
+        return inspector<value_type>::getSizeVal(val.obj);
+    }
+
+    static void prepare(type& val, const std::vector<size_t>& dims) {
+        auto _dims = dims;
+        _dims.push_back(N);
+        inspector<value_type>::prepare(val.obj, _dims); 
+    }
+
+    static hdf5_type* data(type& val) {
+        return inspector<value_type>::data(val.obj);
+    }
+
+    static const hdf5_type* data(const type& val) {
+        return inspector<value_type>::data(val.obj);
+    }
+
+    static void serialize(const type& val, hdf5_type* m) {
+        inspector<value_type>::serialize(val.obj, m);
+    }
+
+    static void unserialize(const hdf5_type* vec_align,
+                            const std::vector<size_t>& dims,
+                            type& val) {
+        auto _dims = dims;
+        _dims.push_back(N);
+        inspector<value_type>::serialize(vec_align, dims, val.obj);
+    }
+};
 template <typename T>
 struct Writer {
     using hdf5_type = typename inspector<T>::hdf5_type;

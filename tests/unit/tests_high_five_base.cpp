@@ -2283,6 +2283,17 @@ TEST_CASE("HighFiveFixedString") {
             CHECK((*iter)[1] == 'y');
         }
     }
+
+    {  // Dedicated FixedLenString
+        std::vector<std::vector<uint8_t>> arr{{'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f', '0', 'a'}, {'1', '2', '3', '4'}};
+        FixedLenString<decltype(arr), 10> strings(arr);
+
+        auto ds = file.createDataSet("FixedLenString", strings);  // Short syntax ok
+
+        std::vector<const char*> arr2{"aaa", "bbb"};
+        FixedLenString<decltype(arr2), 10> strings2(arr2);
+        auto ds2 = file.createDataSet("FixedLenString2", strings2);  // Short syntax ok
+    }
 }
 
 TEST_CASE("HighFiveFixedLenStringArrayStructure") {

@@ -41,6 +41,11 @@ class AnnotateTraits;
 template <std::size_t N>
 class FixedLenStringArray;
 
+enum class Encoding;
+enum class Padding;
+template <typename T, size_t N, Encoding E, Padding P>
+struct FixedLenString;
+
 template <typename Derivate>
 class NodeTraits;
 

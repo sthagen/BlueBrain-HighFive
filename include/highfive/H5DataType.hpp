@@ -274,6 +274,26 @@ template <typename T>
 DataType create_and_check_datatype();
 
 
+enum class Encoding {
+    ASCII = H5T_CSET_ASCII,
+    UTF8 = H5T_CSET_UTF8,
+};
+
+enum class Padding {
+    NULLTERM = H5T_STR_NULLTERM,
+    NULLPAD = H5T_STR_NULLPAD,
+    SPACEPAD = H5T_STR_SPACEPAD,
+};
+
+template <typename T, size_t N, Encoding E = Encoding::UTF8, Padding P = Padding::NULLTERM>
+struct FixedLenString {
+    FixedLenString(T& t)
+    : obj(t)
+    {}
+
+    T& obj;
+};
+
 ///
 /// \brief A structure representing a set of fixed-length strings
 ///
