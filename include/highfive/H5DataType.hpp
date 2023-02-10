@@ -274,12 +274,12 @@ template <typename T>
 DataType create_and_check_datatype();
 
 
-enum class Encoding {
+enum class Encoding: std::underlying_type<H5T_cset_t>::type {
     ASCII = H5T_CSET_ASCII,
     UTF8 = H5T_CSET_UTF8,
 };
 
-enum class Padding {
+enum class Padding: std::underlying_type<H5T_str_t>::type {
     NULLTERM = H5T_STR_NULLTERM,
     NULLPAD = H5T_STR_NULLPAD,
     SPACEPAD = H5T_STR_SPACEPAD,

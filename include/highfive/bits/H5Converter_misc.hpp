@@ -213,7 +213,7 @@ struct inspector<FixedLenStringArray<N>> {
     static constexpr bool is_trivially_copyable = false;
 
     static std::vector<size_t> getDimensions(const type& val) {
-        return std::vector<size_t>{val.size()};
+        return std::vector<size_t>{val.size(), N};
     }
 
     static size_t getSizeVal(const type& val) {
@@ -485,8 +485,8 @@ struct inspector<const char*> {
     using base_type = char;
     using hdf5_type = char*;
 
-    static constexpr size_t ndim = 0;
-    static constexpr size_t recursive_ndim = ndim;
+    static constexpr size_t ndim = 1;
+    static constexpr size_t recursive_ndim = 1;
     static constexpr bool is_trivially_copyable = std::is_trivially_copyable<type>::value;
 
     static size_t getSizeVal(const type& /* val */) {
@@ -494,7 +494,7 @@ struct inspector<const char*> {
     }
 
     static std::vector<size_t> getDimensions(const type& /* val */) {
-        return {};
+        return {0};
     }
 
     static const hdf5_type* data(const type& val) {
@@ -530,6 +530,40 @@ struct inspector<T[N]> {
             sizes.insert(sizes.end(), s.begin(), s.end());
         }
         return sizes;
+    }
+
+    static const hdf5_type* data(const type& val) {
+        return inspector<value_type>::data(val[0]);
+    }
+
+    /* it works because there is only T[][][] currently
+       we will fix it one day */
+    static void serialize(const type& val, hdf5_type* m) {
+        size_t subsize = inspector<value_type>::getSizeVal(val[0]);
+        for (size_t i = 0; i < N; ++i) {
+            inspector<value_type>::serialize(val[i], m + i * subsize);
+        }
+    }
+};
+
+// char[N] is considered as a fixed length string only
+template <size_t N>
+struct inspector<char[N]> {
+    using type = char[N];
+    using value_type = char;
+    using base_type = typename inspector<value_type>::base_type;
+    using hdf5_type = typename inspector<value_type>::hdf5_type;
+
+    static constexpr size_t ndim = 0;
+    static constexpr size_t recursive_ndim = 0;
+    static constexpr bool is_trivially_copyable = true;
+
+    static size_t getSizeVal(const type& val) {
+        return compute_total_size(getDimensions(val));
+    }
+
+    static std::vector<size_t> getDimensions(const type& val) {
+        return {};
     }
 
     static const hdf5_type* data(const type& val) {
@@ -775,7 +809,8 @@ struct inspector<FixedLenString<T, N, E, P>> {
     }
 
     static size_t getSizeVal(const type& val) {
-        return inspector<value_type>::getSizeVal(val.obj);
+        std::cout << compute_total_size(getDimensions(val)) * N << std::endl;
+        return compute_total_size(getDimensions(val)) * N;
     }
 
     static void prepare(type& val, const std::vector<size_t>& dims) {
@@ -801,7 +836,7 @@ struct inspector<FixedLenString<T, N, E, P>> {
                             type& val) {
         auto _dims = dims;
         _dims.push_back(N);
-        inspector<value_type>::serialize(vec_align, dims, val.obj);
+        inspector<value_type>::unserialize(vec_align, dims, val.obj);
     }
 };
 template <typename T>

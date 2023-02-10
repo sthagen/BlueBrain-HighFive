@@ -43,7 +43,6 @@ struct BufferInfo {
     using type_no_const = typename std::remove_const<T>::type;
     using elem_type = typename details::inspector<type_no_const>::base_type;
     using char_array_t = typename details::type_char_array<type_no_const>::type;
-    static constexpr bool is_char_array = !std::is_same<char_array_t, void>::value;
 
     enum Operation { read, write };
     const Operation op;
@@ -110,8 +109,7 @@ BufferInfo<T>::BufferInfo(const DataType& dtype, F getName, Operation _op)
     : op(_op)
     , is_fixed_len_string(dtype.isFixedLenStr())
     // In case we are using Fixed-len strings we need to subtract one dimension
-    , n_dimensions(details::inspector<type_no_const>::recursive_ndim -
-                   ((is_fixed_len_string && is_char_array) ? 1 : 0))
+    , n_dimensions(details::inspector<type_no_const>::recursive_ndim)
     , data_type(
           string_type_checker<char_array_t>::getDataType(create_datatype<elem_type>(), dtype)) {
     if (is_fixed_len_string && std::is_same<elem_type, std::string>::value) {
