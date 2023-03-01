@@ -176,7 +176,7 @@ inline void SliceTraits<Derivate>::read(T& array, const DataTransferProps& xfer_
         [slice]() -> std::string { return details::get_dataset(slice).getPath(); },
         details::BufferInfo<T>::Operation::read);
 
-    if (!details::checkDimensions(mem_space, buffer_info.n_dimensions)) {
+    if (!details::checkDimensions(mem_space.getDimensions(), buffer_info.n_dimensions)) {
         std::ostringstream ss;
         ss << "Impossible to read DataSet of dimensions " << mem_space.getNumberDimensions()
            << " into arrays of dimensions " << buffer_info.n_dimensions;
@@ -236,7 +236,7 @@ inline void SliceTraits<Derivate>::write(const T& buffer, const DataTransferProp
         [slice]() -> std::string { return details::get_dataset(slice).getPath(); },
         details::BufferInfo<T>::Operation::write);
 
-    if (!details::checkDimensions(mem_space, buffer_info.n_dimensions)) {
+    if (!details::checkDimensions(mem_space.getDimensions(), buffer_info.n_dimensions)) {
         std::ostringstream ss;
         ss << "Impossible to write buffer of dimensions " << buffer_info.n_dimensions
            << " into dataset of dimensions " << mem_space.getNumberDimensions();

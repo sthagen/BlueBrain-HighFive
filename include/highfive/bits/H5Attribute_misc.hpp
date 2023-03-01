@@ -66,7 +66,7 @@ inline void Attribute::read(T& array) const {
         [this]() -> std::string { return this->getName(); },
         details::BufferInfo<T>::read);
 
-    if (!details::checkDimensions(mem_space, buffer_info.n_dimensions)) {
+    if (!details::checkDimensions(mem_space.getDimensions(), buffer_info.n_dimensions)) {
         std::ostringstream ss;
         ss << "Impossible to read DataSet of dimensions " << mem_space.getNumberDimensions()
            << " into arrays of dimensions " << buffer_info.n_dimensions;
@@ -112,7 +112,7 @@ inline void Attribute::write(const T& buffer) {
         [this]() -> std::string { return this->getName(); },
         details::BufferInfo<T>::write);
 
-    if (!details::checkDimensions(mem_space, buffer_info.n_dimensions)) {
+    if (!details::checkDimensions(mem_space.getDimensions(), buffer_info.n_dimensions)) {
         std::ostringstream ss;
         ss << "Impossible to write buffer of dimensions " << buffer_info.n_dimensions
            << " into dataset of dimensions " << mem_space.getNumberDimensions();
