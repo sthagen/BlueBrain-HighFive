@@ -32,7 +32,7 @@ struct inspector<Eigen::Matrix<T, M, N>> {
     }
 
     static size_t getRank(const type& val) {
-        return ndim + inspector<value_type>::getRank(val[0]);
+        return ndim + inspector<value_type>::getRank(val.data()[0]);
     }
 
     static std::vector<size_t> getDimensions(const type& val) {
